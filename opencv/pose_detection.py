@@ -11,7 +11,7 @@ import cv2
 detector_model = tf.saved_model.load("./tf_retinaface_mbv2")
 
 # Turtleneck Detection Model Loading
-MODEL_PATH = "../opencv/sk_random_forest/model_94.joblib"
+MODEL_PATH = "../opencv/sk_random_forest/model_938.joblib"
 model = load(MODEL_PATH)
 
 
