@@ -244,60 +244,10 @@ def discern_random_forest(model, Roll, Yaw, Pitch, width, height, eye2box):
 
 
 # ===========================================================================
-# FONT SETTING (font style, size and color)
-font = cv2.FONT_HERSHEY_COMPLEX  # Text in video
-font_size = 0.9
-blue = (225, 0, 0)
-green = (0, 128, 0)
-red = (0, 0, 255)
-orange = (0, 140, 255)
+def get_rf_prob(model, image_path):
+    image = cv2.imread(image_path)
 
-# DEMO GUI SETTING
-total_size = np.array([750, 1400], dtype=int)  # demo-gui size (resolution)
-# complete/final frame to be shown on demo-gui
-frame_show = np.ones((total_size[0], total_size[1], 3), dtype="uint8") * 255
-logo_size = 150
-show_size = 150  # Size showed detected faces
-res_max = np.zeros((2), dtype=int)
-res_resize = np.zeros((2), dtype=int)
-
-
-# RECORDING SETTING (Recordings on/off)
-fps = 10.0
-video_format = cv2.VideoWriter_fourcc("M", "J", "P", "G")
-
-# CAMERA SETTING (video capture initialization)
-camera = 0  # 0: internal, 1: external
-cap = cv2.VideoCapture(camera)
-
-res_actual = np.zeros((1, 2), dtype=int)  # actual resolution of the camera
-res_actual[0, 0] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-res_actual[0, 1] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-print("\ncamera resolution: {}".format(res_actual))
-
-
-# PROCESS FRAMES
-while True:
-
-    ret, frame = cap.read()  # read frame from camera
-    if not (ret):
-        break
-
-    frame = np.array(frame)
-    frame = cv2.flip(frame, 1)
-
-    res_crop = np.asarray(frame.shape)[0:2]  # ?
-
-    # bbs_all, pointss_all = detector.detect_faces(frame)# face detection
-    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    pointss_all, bbs_all, scores_all, _ = face_detector(
-        frame_rgb,
-        image_shape_max=640,
-        score_min=0.95,
-        pixel_min=20,
-        pixel_max=1000,
-        Ain_min=90,
-    )
+    pointss_all, bbs_all, scores_all, _ = face_detector(image)
 
     bbs_all = np.insert(bbs_all, bbs_all.shape[1], scores_all, axis=1)
     pointss_all = np.transpose(pointss_all)
@@ -307,21 +257,11 @@ while True:
 
     if len(bbs_all) > 0:  # if at least one face is detected
         # process only one face (center ?)
-        bb, points = one_face(frame, bbs, pointss)
-        list_size = get_width_and_height(frame, bb, points)  # width and height
+        bb, points = one_face(image, bbs, pointss)
+        list_size = get_width_and_height(image, bb, points)  # width and height
         Roll = find_roll(points)
         Yaw = find_yaw(points)
         Pitch = find_pitch(points)
-
-        cv2.putText(
-            frame, f"Roll: {Roll} (-50 to +50)", (10, 60), font, font_size, red, 1
-        )
-        cv2.putText(
-            frame, f"Yaw: {Yaw} (-100 to +100)", (10, 80), font, font_size, red, 1
-        )
-        cv2.putText(
-            frame, f"Pitch: {Pitch} (0 to 4)", (10, 100), font, font_size, red, 1
-        )
 
         turtle_value = discern_random_forest(
             model, Roll, Yaw, Pitch, list_size[0], list_size[1], list_size[2]
@@ -330,46 +270,17 @@ while True:
         # print(turtle_value)
         if turtle_value[0, 0] > 0.45:
             print(turtle_value)
-            cv2.putText(
-                frame, "Neck Position: Good", (10, 140), font, font_size, green, 1
-            )
+            return True
         else:
-            print(turtle_value)
-            cv2.putText(
-                frame, "Neck Position: Bad", (10, 140), font, font_size, green, 1
-            )
+            return False
 
     else:
-        cv2.putText(
-            frame_show, "no face", (10, logo_size + 200), font, font_size, blue, 2
-        )
+        return np.NaN
 
-    res_max[0] = total_size[0]  # -show_size
-    res_max[1] = total_size[1] - 2 * logo_size
 
-    res_resize[1] = res_max[1]
-    res_resize[0] = res_max[1] / res_crop[1] * res_crop[0]
+IMG2 = "/Users/noopy/turtleneck/Data/Good_total/1.jpg"
+print(get_rf_prob(model, IMG2))  # True
 
-    if res_resize[0] > res_max[0]:
-        res_resize[0] = res_max[0]
-        res_resize[1] = int(res_max[0] / res_crop[0] * res_crop[1] / 2) * 2
+IMG = "/Users/noopy/turtleneck/Data/Bad_total/1.jpg"
+print(get_rf_prob(model, IMG))  # False
 
-    frame_resize = cv2.resize(
-        frame, (res_resize[1], res_resize[0]), interpolation=cv2.INTER_LINEAR
-    )
-    space_vert = (total_size[1] - res_resize[1]) // 2
-
-    frame_show[: frame_resize.shape[0], space_vert:-space_vert, :] = frame_resize
-
-    cv2.putText(frame_show, "q: quit", (10, 50), font, font_size, blue, 2)
-    cv2.imshow("Pose Detection - Retina Face", frame_show)
-
-    key_pressed = cv2.waitKey(1) & 0xFF
-    option = []
-    options = ["Quit"]
-    if key_pressed == ord("q"):
-        break
-
-cap.release()
-
-cv2.destroyAllWindows()
