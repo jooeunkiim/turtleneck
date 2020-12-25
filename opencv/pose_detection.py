@@ -224,7 +224,7 @@ def recover_pad_output(outputs, pad_params):
 
 
 def discern_random_forest(model, Roll, Yaw, Pitch, width, height, eye2box):
-
+    """
     df_temp = pd.DataFrame(
         {
             "Width": width,
@@ -237,6 +237,9 @@ def discern_random_forest(model, Roll, Yaw, Pitch, width, height, eye2box):
         index=[0],
     )
     predict_val = model.predict(df_temp.values)
+    """
+    input_values = [[width, height, eye2box, Roll, Yaw, Pitch]]
+    predict_val = model.predict(input_values)
     return predict_val
 
 
