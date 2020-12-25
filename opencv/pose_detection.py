@@ -10,8 +10,12 @@ import cv2
 detector_model = tf.saved_model.load("./tf_retinaface_mbv2")
 
 # Model Creation
-df_good = pd.read_csv("./df_RYP/df_good.csv", index_col=0)  # set first column as index
-df_bad = pd.read_csv("./df_RYP/df_bad.csv", index_col=0)  # set first column as index
+df_good = pd.read_csv(
+    "./Pitch_Roll_Yaw_Dataset/df_good.csv", index_col=0
+)  # set first column as index
+df_bad = pd.read_csv(
+    "./Pitch_Roll_Yaw_Dataset/df_bad.csv", index_col=0
+)  # set first column as index
 
 df_good["label"] = 0
 df_bad["label"] = 1
