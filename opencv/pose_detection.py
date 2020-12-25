@@ -3,31 +3,16 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from joblib import dump, load
 import cv2
 
 
 # RetinaFace face detector
 detector_model = tf.saved_model.load("./tf_retinaface_mbv2")
 
-# Model Creation
-df_good = pd.read_csv(
-    "./Pitch_Roll_Yaw_Dataset/df_good.csv", index_col=0
-)  # set first column as index
-df_bad = pd.read_csv(
-    "./Pitch_Roll_Yaw_Dataset/df_bad.csv", index_col=0
-)  # set first column as index
-
-df_good["label"] = 0
-df_bad["label"] = 1
-
-df = pd.concat([df_bad, df_good])
-
-y = df["label"]
-X = df.drop(["label"], axis=1)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-model = RandomForestClassifier(n_estimators=100)
-model.fit(X_train, y_train)
-print("model score:", model.score(X_test, y_test))
+# Turtleneck Detection Model Loading
+MODEL_PATH = "../opencv/sk_random_forest/model_94.joblib"
+model = load(MODEL_PATH)
 
 
 def one_face(frame, bbs, pointss):
