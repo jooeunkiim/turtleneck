@@ -224,7 +224,7 @@ def recover_pad_output(outputs, pad_params):
 
 
 def discern_random_forest(model, Roll, Yaw, Pitch, width, height, eye2box):
-
+    """
     df_temp = pd.DataFrame(
         {
             "Width": width,
@@ -237,6 +237,9 @@ def discern_random_forest(model, Roll, Yaw, Pitch, width, height, eye2box):
         index=[0],
     )
     predict_val = model.predict(df_temp.values)
+    """
+    input_values = [[width, height, eye2box, Roll, Yaw, Pitch]]
+    predict_val = model.predict(input_values)
     return predict_val
 
 
@@ -260,13 +263,8 @@ res_resize = np.zeros((2), dtype=int)
 
 
 # RECORDING SETTING (Recordings on/off)
-image_save = False  # save face image
-video_save = True  # save video
 fps = 10.0
 video_format = cv2.VideoWriter_fourcc("M", "J", "P", "G")
-if video_save:
-    video_file = "video_out.avi"
-    video_out = cv2.VideoWriter(video_file, video_format, fps, (640, 480))
 
 # CAMERA SETTING (video capture initialization)
 camera = 0  # 0: internal, 1: external
@@ -331,9 +329,13 @@ while True:
 
         # print(turtle_value)
         if turtle_value == 0:
-            cv2.putText(frame, "Position: Good", (10, 140), font, font_size, green, 1)
+            cv2.putText(
+                frame, "Neck Position: Good", (10, 140), font, font_size, green, 1
+            )
         else:
-            cv2.putText(frame, "Position: Bad", (10, 140), font, font_size, green, 1)
+            cv2.putText(
+                frame, "Neck Position: Bad", (10, 140), font, font_size, green, 1
+            )
 
     else:
         cv2.putText(
@@ -360,9 +362,6 @@ while True:
     cv2.putText(frame_show, "q: quit", (10, 50), font, font_size, blue, 2)
     cv2.imshow("Pose Detection - Retina Face", frame_show)
 
-    if video_save:
-        video_out.write(frame)
-
     key_pressed = cv2.waitKey(1) & 0xFF
     option = []
     options = ["Quit"]
@@ -370,8 +369,5 @@ while True:
         break
 
 cap.release()
-
-if video_save:
-    video_out.release()
 
 cv2.destroyAllWindows()
